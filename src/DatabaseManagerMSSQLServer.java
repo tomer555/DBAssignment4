@@ -12,6 +12,9 @@ public class DatabaseManagerMSSQLServer extends DatabaseManager {
     public DatabaseManagerMSSQLServer(String connectionString, String databaseName, String username, String password) {
         super(connectionString, databaseName, username, password);
     }
+    public DatabaseManagerMSSQLServer(){
+     super("jdbc:sqlserver://localhost;Instance=SQLEXPRESS;integratedSecurity=true");
+    }
 
 
     @Override

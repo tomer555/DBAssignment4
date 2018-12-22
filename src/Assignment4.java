@@ -17,7 +17,7 @@ public class Assignment4 {
     private DatabaseManager manager;
     private Assignment4() {
         //Establish connection to DB2019_Ass2
-        this.manager=new DatabaseManagerMSSQLServer("DB2019_Ass2");
+        this.manager=new DatabaseManagerMSSQLServer();
         manager.startConnection();
 
 
@@ -72,8 +72,7 @@ public class Assignment4 {
 
 
     public static void main(String[] args) {
-        Assignment4 ass = new Assignment4();
-        /*
+
         File file = new File(".");
         String csvFile = args[0];
         String line = "";
@@ -93,7 +92,7 @@ public class Assignment4 {
             e.printStackTrace();
 
         }
-        */
+
     }
 
     public DatabaseManager getManager(){
@@ -129,15 +128,38 @@ public class Assignment4 {
 
     }
 
-
+    //Revise
     private double getEmployeeTotalSalary() {
-        return 0;
+        String query="SELECT SUM(SalaryPerDay) FROM ConstructorEmployee";
+        PreparedStatement statement;
+        double output=-1;
+        try {
+            statement = manager.conn.prepareStatement(query);
+            ResultSet result = statement.executeQuery();
+            String sum = result.getString(1);
+            output= Double.parseDouble(sum);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return output*30;
     }
 
-
+    //Revise
     private int getTotalProjectBudget() {
-        return 0;
+        String query="SELECT SUM(Budget) FROM Project";
+        PreparedStatement statement;
+        int output=-1;
+        try {
+            statement = manager.conn.prepareStatement(query);
+            ResultSet result = statement.executeQuery();
+            String sum = result.getString(1);
+            output= Integer.parseInt(sum);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return output;
     }
+    //Revise
     private void dropDB() {
         String drop = "DROP DATABASE DB2019_Ass2";
         try {
@@ -147,7 +169,7 @@ public class Assignment4 {
             e.printStackTrace();
         }
     }
-
+    //Revise
     private void initDB(String csvPath) {
         ScriptRunner runner = new ScriptRunner(manager.conn, true, true);
         try {
