@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 
@@ -15,7 +13,7 @@ public class Assignment4 {
     private DatabaseManager manager;
     private Assignment4() {
         //Establish connection to DB2019_Ass2
-        this.manager=new DatabaseManagerMSSQLServer("DB2019_Ass2");
+        this.manager=new DatabaseManagerMSSQLServer("master");
         manager.startConnection();
 
 
@@ -71,7 +69,8 @@ public class Assignment4 {
 
     public static void main(String[] args) {
         Assignment4 ass = new Assignment4();
-        System.out.println(ass.calculateIncomeFromParking(2018));
+        //ass.dropDB();
+        ass.initDB("DB2019_Project_Ass4_DDL.sql");
         /*
         File file = new File(".");
         String csvFile = args[0];
@@ -180,22 +179,18 @@ public class Assignment4 {
     }
     //Revise
     private void dropDB() {
-        String drop = "DROP DATABASE DB2019_Ass2";
+        manager.selectDatabase("master");
+        String drop ="Drop DATABASE DB2019_Ass2";
         try {
             Statement statement = manager.conn.createStatement();
-            statement.executeUpdate(drop);
+            statement.execute(drop);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
     //Revise
     private void initDB(String csvPath) {
-        ScriptRunner runner = new ScriptRunner(manager.conn, true, true);
-        try {
-            runner.runScript(new BufferedReader(new FileReader(csvPath)));
-        } catch (IOException | SQLException e) {
-            e.printStackTrace();
-        }
+        executeSQLFile(csvPath);
     }
     private int calculateIncomeFromParking(int year) {
         String query="SELECT SUM(Cost) FROM CarParking WHERE StartTime>=? AND EndTime<=?";
@@ -244,7 +239,7 @@ public class Assignment4 {
     //Revise
     private void AddEmployee(int EID, String LastName, String FirstName, Date BirthDate, String StreetName, int Number, int door, String City) {
         try {
-            CallableStatement cs=manager.conn.prepareCall(("{sp_AddMunicipalEmployee(?,?,?,?,?,?,?,?)}"));
+            CallableStatement cs=manager.conn.prepareCall(("{ call sp_AddMunicipalEnployee(?,?,?,?,?,?,?,?)}"));
             cs.setInt(1,EID);
             cs.setString(2,LastName);
             cs.setString(3,FirstName);
@@ -274,5 +269,36 @@ public class Assignment4 {
         }
         return output;
 
+    }
+
+    private void executeSQLFile(String path){
+        //Now read line bye line
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+        String thisLine, sqlQuery;
+        Statement stmt=manager.conn.createStatement();
+        sqlQuery = "";
+        while ((thisLine = br.readLine()) != null){
+                //Skip comments and empty lines
+                if(thisLine.length() > 0 && thisLine.charAt(0) == '-' || thisLine.length() == 0 ||thisLine.contains("GO"))
+                    continue;
+                if(thisLine.contains("USE")) {
+                    manager.selectDatabase(thisLine.substring(thisLine.indexOf('[')+1, thisLine.indexOf(']')));
+                    continue;
+                }
+                sqlQuery = sqlQuery + ' ' + thisLine;
+                //If one command complete
+                if(sqlQuery.charAt(sqlQuery.length() - 1) == ';') {
+                    sqlQuery = sqlQuery.replace(';' , ' '); //Remove the ; since jdbc complains
+                    try {
+                        stmt.execute(sqlQuery);
+                    } catch(Exception ex) {
+                         ex.getMessage();
+                    }
+                    sqlQuery = "";
+                }
+            }
+        } catch(IOException | SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

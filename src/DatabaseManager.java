@@ -68,7 +68,7 @@ public class DatabaseManager {
      *
      * @return true if the database exists and been selected.
      */
-    private void selectDatabase(String databaseName) {
+    public void selectDatabase(String databaseName) {
         try {
             Statement stmt = conn.createStatement();
             stmt.execute("use " + databaseName);
