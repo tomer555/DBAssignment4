@@ -2,9 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
-import java.util.Calendar;
 import java.text.SimpleDateFormat;
-import java.io.File;
 
 import javafx.util.Pair;
 
@@ -17,7 +15,7 @@ public class Assignment4 {
     private DatabaseManager manager;
     private Assignment4() {
         //Establish connection to DB2019_Ass2
-        this.manager=new DatabaseManagerMSSQLServer();
+        this.manager=new DatabaseManagerMSSQLServer("DB2019_Ass2");
         manager.startConnection();
 
 
@@ -72,7 +70,9 @@ public class Assignment4 {
 
 
     public static void main(String[] args) {
-
+        Assignment4 ass = new Assignment4();
+        System.out.println(ass.calculateIncomeFromParking(2018));
+        /*
         File file = new File(".");
         String csvFile = args[0];
         String line = "";
@@ -92,6 +92,7 @@ public class Assignment4 {
             e.printStackTrace();
 
         }
+        */
 
     }
 
@@ -118,26 +119,42 @@ public class Assignment4 {
             e.printStackTrace();
         }
     }
-
+    //Revise
     private void updateEmployeeSalaries(double percentage) {
-
-    }
-
-
-    public void updateAllProjectsBudget(double percentage) {
-
+        String query="UPDATE ConstructionEmployeeOverFifty SET SalaryPerDay=SalaryPerDay*?";
+        applyPercentage(query,percentage);
     }
 
     //Revise
-    private double getEmployeeTotalSalary() {
-        String query="SELECT SUM(SalaryPerDay) FROM ConstructorEmployee";
+    public void updateAllProjectsBudget(double percentage) {
+        String query="UPDATE Project SET Budget=Budget*?";
+        applyPercentage(query,percentage);
+
+    }
+    //Revise
+    private void applyPercentage(String query, double percentage){
+        PreparedStatement statement;
+        try {
+            statement = manager.conn.prepareStatement(query);
+            statement.setDouble(1,1+(percentage/100));
+            statement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //Revise
+    public double getEmployeeTotalSalary() {
+        String query="SELECT SUM(SalaryPerDay) as TotalSalary FROM ConstructorEmployee";
         PreparedStatement statement;
         double output=-1;
         try {
             statement = manager.conn.prepareStatement(query);
             ResultSet result = statement.executeQuery();
-            String sum = result.getString(1);
-            output= Double.parseDouble(sum);
+            if (result.next()) {
+                String value = result.getString(1) == null ? "NULL" : result.getString(1);
+                output=Double.parseDouble(value);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -152,8 +169,10 @@ public class Assignment4 {
         try {
             statement = manager.conn.prepareStatement(query);
             ResultSet result = statement.executeQuery();
-            String sum = result.getString(1);
-            output= Integer.parseInt(sum);
+            if (result.next()) {
+                String sum = result.getString(1) == null ? "NULL" : result.getString(1);
+                output=Integer.parseInt(sum);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -179,20 +198,47 @@ public class Assignment4 {
         }
     }
     private int calculateIncomeFromParking(int year) {
-        return 0;
+        String query="SELECT SUM(Cost) FROM CarParking WHERE StartTime>=? AND EndTime<=?";
+        PreparedStatement statement;
+        int output=-1;
+        try {
+            statement = manager.conn.prepareStatement(query);
+            statement.setString(1,year+"-01-01");
+            statement.setString(2,year+"-12-31");
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                String sum = result.getString(1) == null ? "NULL" : result.getString(1);
+                output=Integer.parseInt(sum);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return output;
     }
-
+    //Revise
     private ArrayList<Pair<Integer, Integer>> getMostProfitableParkingAreas() {
-        return null;
+        String query="SELECT TOP(5) AID, SUM(Cost) as Earnings FROM ParkingArea as pa JOIN  CarParking as cp\n" +
+                "ON pa.AID=cp.ParkingAreaID\n" +
+                "GROUP BY AID\n" +
+                "Order by SUM(Cost) DESC;";
+        return ExecuteArrayPairInteger(query);
     }
-
+    //Revise
     private ArrayList<Pair<Integer, Integer>> getNumberOfParkingByArea() {
-        return null;
+        String query="SELECT  AID, COUNT(AID) as ParkingCount FROM ParkingArea as pa JOIN  CarParking as cp\n" +
+                "ON pa.AID=cp.ParkingAreaID\n" +
+                "GROUP BY AID\n" +
+                "Order by COUNT(AID) DESC;";
+        return ExecuteArrayPairInteger(query);
     }
 
-
+    //Revise
     private ArrayList<Pair<Integer, Integer>> getNumberOfDistinctCarsByArea() {
-        return null;
+        String query="SELECT  AID, COUNT(Distinct CID) as ParkingCount FROM ParkingArea as pa JOIN  CarParking as cp\n" +
+                "ON pa.AID=cp.ParkingAreaID\n" +
+                "GROUP BY AID\n" +
+                "Order by COUNT(CID) DESC;";
+        return ExecuteArrayPairInteger(query);
     }
 
     //Revise
@@ -211,5 +257,22 @@ public class Assignment4 {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+    //Revise
+    private ArrayList<Pair<Integer, Integer>> ExecuteArrayPairInteger(String query){
+        ArrayList<Pair<Integer,Integer>> output=new ArrayList<>();
+        Statement s;
+        try {
+            s = manager.conn.createStatement();
+            ResultSet rs=s.executeQuery(query);
+            while (rs.next()){
+                Pair<Integer,Integer> pair=new Pair<>(rs.getInt(1),rs.getInt(2));
+                output.add(pair);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return output;
+
     }
 }
