@@ -279,11 +279,14 @@ public class Assignment4 {
         sqlQuery = "";
         while ((thisLine = br.readLine()) != null){
                 //Skip comments and empty lines
-                if(thisLine.length() > 0 && thisLine.charAt(0) == '-' || thisLine.length() == 0 ||thisLine.contains("GO"))
+                if(thisLine.length() > 0 && (thisLine.charAt(0) == '-'||thisLine.charAt(1) == '-') || thisLine.length() == 0 ||thisLine.contains("GO"))
                     continue;
                 if(thisLine.contains("USE")) {
                     manager.selectDatabase(thisLine.substring(thisLine.indexOf('[')+1, thisLine.indexOf(']')));
                     continue;
+                }
+                if(thisLine.contains("--")){
+                    thisLine=thisLine.substring(0,thisLine.indexOf('-'));
                 }
                 sqlQuery = sqlQuery + ' ' + thisLine;
                 //If one command complete
