@@ -13,11 +13,8 @@ public class Assignment4 {
     private DatabaseManager manager;
     private Assignment4() {
         //Establish connection to DB2019_Ass2
-        this.manager=new DatabaseManagerMSSQLServer("master");
+        this.manager=new DatabaseManagerMSSQLServer("DB2019_Ass2");
         manager.startConnection();
-
-
-
     }
 
    public static void executeFunc(Assignment4 ass, String[] args) {
@@ -68,31 +65,25 @@ public class Assignment4 {
 
 
     public static void main(String[] args) {
-        Assignment4 ass = new Assignment4();
+        //Assignment4 ass = new Assignment4();
         //ass.dropDB();
-        ass.initDB("DB2019_Project_Ass4_DDL.sql");
-        /*
+
         File file = new File(".");
         String csvFile = args[0];
         String line = "";
         String cvsSplitBy = ",";
         Assignment4 ass = new Assignment4();
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
-
             while ((line = br.readLine()) != null) {
-
                 // use comma as separator
                 String[] row = line.split(cvsSplitBy);
                 executeFunc(ass, row);
-
             }
 
         } catch (IOException e) {
             e.printStackTrace();
 
         }
-        */
-
     }
 
     public DatabaseManager getManager(){
@@ -151,13 +142,12 @@ public class Assignment4 {
             statement = manager.conn.prepareStatement(query);
             ResultSet result = statement.executeQuery();
             if (result.next()) {
-                String value = result.getString(1) == null ? "NULL" : result.getString(1);
-                output=Double.parseDouble(value);
+                 output = result.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return output*30;
+        return output;
     }
 
     //Revise
@@ -169,8 +159,7 @@ public class Assignment4 {
             statement = manager.conn.prepareStatement(query);
             ResultSet result = statement.executeQuery();
             if (result.next()) {
-                String sum = result.getString(1) == null ? "NULL" : result.getString(1);
-                output=Integer.parseInt(sum);
+                output=result.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -202,8 +191,7 @@ public class Assignment4 {
             statement.setString(2,year+"-12-31");
             ResultSet result = statement.executeQuery();
             if (result.next()) {
-                String sum = result.getString(1) == null ? "NULL" : result.getString(1);
-                output=Integer.parseInt(sum);
+                output=result.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
