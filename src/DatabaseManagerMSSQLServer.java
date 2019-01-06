@@ -2,20 +2,7 @@ public class DatabaseManagerMSSQLServer extends DatabaseManager {
 
     public DatabaseManagerMSSQLServer(String databaseName) {
         super("jdbc:sqlserver://localhost;Instance=SQLEXPRESS;integratedSecurity=true", databaseName, "", "");
-        //super("jdbc:sqlserver://localhost;integratedSecurity=true", databaseName, "", "");
     }
-
-    public DatabaseManagerMSSQLServer(String connectionString, String databaseName) {
-        super(connectionString, databaseName, "", "");
-    }
-
-    public DatabaseManagerMSSQLServer(String connectionString, String databaseName, String username, String password) {
-        super(connectionString, databaseName, username, password);
-    }
-    public DatabaseManagerMSSQLServer(){
-     super("jdbc:sqlserver://localhost;Instance=SQLEXPRESS;integratedSecurity=true");
-    }
-
 
     @Override
     public void startConnection() {

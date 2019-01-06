@@ -1,10 +1,7 @@
 import java.io.*;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-
 import javafx.util.Pair;
-
-
 import java.util.ArrayList;
 
 
@@ -12,8 +9,8 @@ import java.util.ArrayList;
 public class Assignment4 {
     private DatabaseManager manager;
     private Assignment4() {
-        //Establish connection to DB2019_Ass2
-        this.manager=new DatabaseManagerMSSQLServer("DB2019_Ass2");
+        //Establish connection to sql server
+        this.manager=new DatabaseManagerMSSQLServer("master");
         manager.startConnection();
     }
 
@@ -65,8 +62,6 @@ public class Assignment4 {
 
 
     public static void main(String[] args) {
-        //Assignment4 ass = new Assignment4();
-        //ass.dropDB();
 
         File file = new File(".");
         String csvFile = args[0];
@@ -86,11 +81,7 @@ public class Assignment4 {
         }
     }
 
-    public DatabaseManager getManager(){
-        return manager;
-    }
 
-    //Revise
     private void loadNeighborhoodsFromCsv(String csvPath) {
         String line;
         String cvsSplitBy = ",";
@@ -108,20 +99,21 @@ public class Assignment4 {
         } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
+        manager.closeConnection();//closing the connection
     }
-    //Revise
+
     private void updateEmployeeSalaries(double percentage) {
         String query="UPDATE ConstructionEmployeeOverFifty SET SalaryPerDay=SalaryPerDay*?";
         applyPercentage(query,percentage);
     }
 
-    //Revise
+
     public void updateAllProjectsBudget(double percentage) {
         String query="UPDATE Project SET Budget=Budget*?";
         applyPercentage(query,percentage);
 
     }
-    //Revise
+
     private void applyPercentage(String query, double percentage){
         PreparedStatement statement;
         try {
@@ -133,7 +125,7 @@ public class Assignment4 {
         }
     }
 
-    //Revise
+
     public double getEmployeeTotalSalary() {
         String query="SELECT SUM(SalaryPerDay) as TotalSalary FROM ConstructorEmployee";
         PreparedStatement statement;
@@ -150,7 +142,6 @@ public class Assignment4 {
         return output;
     }
 
-    //Revise
     private int getTotalProjectBudget() {
         String query="SELECT SUM(Budget) FROM Project";
         PreparedStatement statement;
@@ -166,7 +157,7 @@ public class Assignment4 {
         }
         return output;
     }
-    //Revise
+
     private void dropDB() {
         manager.selectDatabase("master");
         String drop ="Drop DATABASE DB2019_Ass2";
@@ -177,10 +168,12 @@ public class Assignment4 {
             e.printStackTrace();
         }
     }
-    //Revise
+
     private void initDB(String csvPath) {
         executeSQLFile(csvPath);
     }
+
+
     private int calculateIncomeFromParking(int year) {
         String query="SELECT SUM(Cost) FROM CarParking WHERE StartTime>=? AND EndTime<=?";
         PreparedStatement statement;
@@ -198,7 +191,7 @@ public class Assignment4 {
         }
         return output;
     }
-    //Revise
+
     private ArrayList<Pair<Integer, Integer>> getMostProfitableParkingAreas() {
         String query="SELECT TOP(5) AID, SUM(Cost) as Earnings FROM ParkingArea as pa JOIN  CarParking as cp\n" +
                 "ON pa.AID=cp.ParkingAreaID\n" +
@@ -206,7 +199,7 @@ public class Assignment4 {
                 "Order by SUM(Cost) DESC;";
         return ExecuteArrayPairInteger(query);
     }
-    //Revise
+
     private ArrayList<Pair<Integer, Integer>> getNumberOfParkingByArea() {
         String query="SELECT  AID, COUNT(AID) as ParkingCount FROM ParkingArea as pa JOIN  CarParking as cp\n" +
                 "ON pa.AID=cp.ParkingAreaID\n" +
@@ -215,7 +208,7 @@ public class Assignment4 {
         return ExecuteArrayPairInteger(query);
     }
 
-    //Revise
+
     private ArrayList<Pair<Integer, Integer>> getNumberOfDistinctCarsByArea() {
         String query="SELECT  AID, COUNT(Distinct CID) as ParkingCount FROM ParkingArea as pa JOIN  CarParking as cp\n" +
                 "ON pa.AID=cp.ParkingAreaID\n" +
@@ -224,7 +217,7 @@ public class Assignment4 {
         return ExecuteArrayPairInteger(query);
     }
 
-    //Revise
+
     private void AddEmployee(int EID, String LastName, String FirstName, Date BirthDate, String StreetName, int Number, int door, String City) {
         try {
             CallableStatement cs=manager.conn.prepareCall(("{ call sp_AddMunicipalEnployee(?,?,?,?,?,?,?,?)}"));
@@ -241,7 +234,7 @@ public class Assignment4 {
             e.printStackTrace();
         }
     }
-    //Revise
+
     private ArrayList<Pair<Integer, Integer>> ExecuteArrayPairInteger(String query){
         ArrayList<Pair<Integer,Integer>> output=new ArrayList<>();
         Statement s;
@@ -267,7 +260,7 @@ public class Assignment4 {
         sqlQuery = "";
         while ((thisLine = br.readLine()) != null){
                 //Skip comments and empty lines
-                if(thisLine.length() > 0 && (thisLine.charAt(0) == '-'||thisLine.charAt(1) == '-') || thisLine.length() == 0 ||thisLine.contains("GO"))
+                if(thisLine.length() == 0 || thisLine.length() > 1 && (thisLine.charAt(0) == '-'||thisLine.charAt(1) == '-') || thisLine.contains("GO"))
                     continue;
                 if(thisLine.contains("USE")) {
                     manager.selectDatabase(thisLine.substring(thisLine.indexOf('[')+1, thisLine.indexOf(']')));
